@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: deepseek-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: chatbotdb
+    volumes:
+      - mongodb_data:/data/db
+
+  chatbot-app:
+    build: .
+    container_name: deepseek-springboot
+    ports:
+      - "8080:8080"
+    environment:
+      # MongoDB 配置
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/chatbotdb
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_API_URL: https://api.deepseek.com/v1/chat/completions
+
+      # Auth0 配置
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
+
+      # Spring Security OAuth2 配置
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://${AUTH0_DOMAIN}/
+
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
